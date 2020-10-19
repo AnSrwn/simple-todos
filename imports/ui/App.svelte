@@ -4,8 +4,18 @@
   import { Tasks } from '../api/tasks.js'
 
   let newTask = "";
+  let hideCompleted = false;
+  let tasks;
 
-  $: tasks = useTracker(() => Tasks.find({}, { sort: { createdAt: -1 } }).fetch());
+  $: incompleteCount = useTracker(() => Tasks.find({ checked: { $ne: true } }).count()); 
+
+  const taskStore = Tasks.find({}, { sort: { createdAt: -1 } });
+  $: {
+      tasks = $taskStore;
+      if (hideCompleted) {
+          tasks = tasks.filter(task => !task.checked);
+      }
+  };
 
   function handleSubmit(event) {
     Tasks.insert({
@@ -21,7 +31,14 @@
 
 <div class="container">
   <header>
-    <h1>Todo List</h1>
+    <h1>Todo List ({ $incompleteCount })</h1>
+    <label className="hide-completed">
+      <input
+        type="checkbox"
+        bind:checked={hideCompleted}
+      />
+      Hide Completed Tasks
+    </label>
     <form class="new-task" on:submit|preventDefault={handleSubmit}>
       <input
         type="text"
@@ -31,7 +48,7 @@
     </form>
   </header>
   <ul>
-  {#each $tasks as task}
+    {#each tasks as task}
     <Task
       key={task._id}
       task={task}
