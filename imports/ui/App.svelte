@@ -23,16 +23,11 @@
   };
 
   function handleSubmit(event) {
-    Tasks.insert({
-      text: newTask,
-      createdAt: new Date(), // current time
-      owner: Meteor.userId(), // _id of logged in user
-      username: Meteor.user().username // username of logged in user
-    });
+    Meteor.call("tasks.insert", newTask);
 
     // Clear form
     newTask = "";
-  };
+  }
 
 </script>
 
