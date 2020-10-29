@@ -1,5 +1,6 @@
 <script>
   import { Meteor } from "meteor/meteor";
+  import { onMount } from 'svelte';
   import { useTracker } from 'meteor/rdb:svelte-meteor-data';
   import { BlazeTemplate } from 'meteor/svelte:blaze-integration';
   import Task from './Task.svelte';
@@ -9,6 +10,10 @@
   let hideCompleted = false;
   let tasks;
   let currentUser;
+
+  onMount(async () => {
+    Meteor.subscribe('tasks');
+  });
 
   $: incompleteCount = useTracker(() => Tasks.find({ checked: { $ne: true } }).count());
 
