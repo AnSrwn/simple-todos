@@ -1,13 +1,18 @@
 <script>
+  import { Meteor } from "meteor/meteor";
   import { useTracker } from 'meteor/rdb:svelte-meteor-data';
+  import { BlazeTemplate } from 'meteor/svelte:blaze-integration';
   import Task from './Task.svelte';
   import { Tasks } from '../api/tasks.js'
 
   let newTask = "";
   let hideCompleted = false;
   let tasks;
+  let currentUser;
 
-  $: incompleteCount = useTracker(() => Tasks.find({ checked: { $ne: true } }).count()); 
+  $: incompleteCount = useTracker(() => Tasks.find({ checked: { $ne: true } }).count());
+
+  $: currentUser = useTracker(() => Meteor.user());
 
   const taskStore = Tasks.find({}, { sort: { createdAt: -1 } });
   $: {
@@ -20,7 +25,9 @@
   function handleSubmit(event) {
     Tasks.insert({
       text: newTask,
-      createdAt: new Date() // current time
+      createdAt: new Date(), // current time
+      owner: Meteor.userId(), // _id of logged in user
+      username: Meteor.user().username // username of logged in user
     });
 
     // Clear form
@@ -39,13 +46,18 @@
       />
       Hide Completed Tasks
     </label>
-    <form class="new-task" on:submit|preventDefault={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Type to add new tasks"
-        bind:value={newTask}
-      />
-    </form>
+
+    <BlazeTemplate template="loginButtons" />
+    
+    {#if $currentUser}
+      <form class="new-task" on:submit|preventDefault={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Type to add new tasks"
+          bind:value={newTask}
+        />
+      </form>
+    {/if}
   </header>
   <ul>
     {#each tasks as task}
